@@ -6,6 +6,9 @@ from sklearn.datasets import load_iris
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
+# 参考
+# https://naotaka1128.hatenadiary.jp/entry/kaggle-compe-tips
+
 
 def train_model(X_train, y_train, X_valid, y_valid, params, early_stopping_rounds=50):
     """
@@ -120,21 +123,27 @@ if __name__ == '__main__':
         'colsample_bytree': 0.8
     }
 
-    max_depth_options = [3, 6, 9]
-    eta_options = [0.01, 0.05, 0.1]
-    # パラメータグリッドの例
+    # パラメータのグリッドサーチ
+    max_depth_options = [3, 5, 7, 9]
+    eta_options = [0.01, 0.05, 0.1, 0.3]
+    # mcw_options = [1, 3, 6, 10] # train/valのgapがあったら大きく
+    mcw_options = [1]
+    fixed_params = {
+        'objective': 'multi:softmax',
+        'eval_metric': 'mlogloss',
+        'seed': 42,
+        'num_class': 3,
+        'subsample': 0.7,
+        'colsample_bytree': 0.8,
+    }
     param_grid = [
         {
-            'objective': 'multi:softmax',
-            'eval_metric': 'mlogloss',
-            'seed': 42,
-            'num_class': 3,
+            **fixed_params,
             'eta': eta,
             'max_depth': depth,
-            'subsample': 0.8,
-            'colsample_bytree': 0.8,
+            'min_child_weight': mcw,
         }
-        for depth, eta in itertools.product(max_depth_options, eta_options)
+        for depth, eta, mcw in itertools.product(max_depth_options, eta_options, mcw_options)
     ]
 
     data = load_iris()
