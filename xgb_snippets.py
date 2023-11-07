@@ -1,5 +1,6 @@
 import itertools
 
+import matplotlib.pyplot as plt
 import numpy as np
 import xgboost as xgb
 from sklearn.datasets import load_iris
@@ -10,12 +11,12 @@ from sklearn.model_selection import StratifiedKFold
 # https://naotaka1128.hatenadiary.jp/entry/kaggle-compe-tips
 
 
-def train_model(X_train, y_train, X_valid, y_valid, params, early_stopping_rounds=50):
+def train_model(X_train, y_train, X_valid, y_valid, params, early_stopping_rounds=50, f_name=None):
     """
     Train an XGBoost model with early stopping.
     """
-    dtrain = xgb.DMatrix(X_train, label=y_train)
-    dvalid = xgb.DMatrix(X_valid, label=y_valid)
+    dtrain = xgb.DMatrix(X_train, label=y_train, feature_names=f_name)
+    dvalid = xgb.DMatrix(X_valid, label=y_valid, feature_names=f_name)
 
     evals = [(dtrain, 'train'), (dvalid, 'valid')]
     model = xgb.train(
@@ -58,7 +59,17 @@ def stratified_kfold_xgboost(X, y, params, n_splits=5, early_stopping_rounds=50)
     print(f"\nMean Accuracy over {n_splits} folds: {np.mean(fold_accuracies)}")
 
 
-def stratified_kfold_xgb_params_search(X, y, param_grid, n_splits=5, early_stopping_rounds=50):
+def check_feature_importance(X, y, params, f_name=None, n_splits=5, early_stopping_rounds=50):
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+    for fold, (train_idx, valid_idx) in enumerate(skf.split(X, y), start=1):
+        X_train, y_train = X[train_idx], y[train_idx]
+        X_valid, y_valid = X[valid_idx], y[valid_idx]
+
+        model = train_model(X_train, y_train, X_valid, y_valid, params, early_stopping_rounds, f_name)
+        plot_feature_importance(model)
+
+
+def stratified_kfold_xgb_params_search(X, y, param_grid, f_name=None, n_splits=5, early_stopping_rounds=50):
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
     for train_index, test_index in skf.split(X, y):
         X_train, X_test = X[train_index], X[test_index]
@@ -69,8 +80,8 @@ def stratified_kfold_xgb_params_search(X, y, param_grid, n_splits=5, early_stopp
 
         # パラメータの組み合わせを繰り返します
         for params in param_grid:
-            dtrain = xgb.DMatrix(X_train, label=y_train)
-            dtest = xgb.DMatrix(X_test, label=y_test)
+            dtrain = xgb.DMatrix(X_train, label=y_train, feature_names=f_name)
+            dtest = xgb.DMatrix(X_test, label=y_test, feature_names=f_name)
 
             # 学習
             evals_result = {}
@@ -94,6 +105,12 @@ def stratified_kfold_xgb_params_search(X, y, param_grid, n_splits=5, early_stopp
         # 最良のパラメータを表示
         print(f"Best score: {best_score}, Best Params: {best_params}")
         return best_params
+
+
+def plot_feature_importance(model):
+    _, ax = plt.subplots(figsize=(12, 4))
+    xgb.plot_importance(model, ax=ax, importance_type='gain')
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -149,6 +166,8 @@ if __name__ == '__main__':
     data = load_iris()
     X = data.data
     y = data.target
+    f_name = data.feature_names
     # stratified_kfold_xgboost(X, y, xgb_params, n_splits=3)
-    xgb_params = stratified_kfold_xgb_params_search(X, y, param_grid, n_splits=3)
-    stratified_kfold_xgboost(X, y, xgb_params, n_splits=3)
+    xgb_params = stratified_kfold_xgb_params_search(X, y, param_grid, f_name, n_splits=3)
+    # stratified_kfold_xgboost(X, y, xgb_params, n_splits=3)
+    check_feature_importance(X, y, xgb_params, f_name, n_splits=3)
