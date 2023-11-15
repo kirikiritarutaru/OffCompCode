@@ -2,39 +2,33 @@ import numpy as np
 import pandas as pd
 from sklearn import base
 from sklearn.model_selection import KFold
+from sklearn.preprocessing import LabelEncoder
 
 
-def frequency_encoding(train_x, test_x, cat_cols):
-    for c in cat_cols:
-        freq = train_x[c].value_counts()
-        train_x[c] = train_x[c].map(freq)
-        test_x[c] = test_x[c].map(freq)
-    return train_x, test_x
+def one_hot_encode(df, columns, binary_encode=False):
+    for column in columns:
+        if column not in df.columns:
+            raise ValueError(f"Column '{column}' not found in DataFrame.")
+        one_hot = pd.get_dummies(df[column], prefix=column)
+        if binary_encode:
+            one_hot = one_hot.astype(int)
+        df = df.drop(column, axis=1).join(one_hot)
+    return df
 
 
-def target_encoding(train_x, train_y, test_x, cat_cols):
-    for c in cat_cols:
-        # 学習データ全体で各カテゴリにおけるtargetの平均を計算
-        data_tmp = pd.DataFrame({c: train_x[c], 'target': train_y})
-        target_mean = data_tmp.groupby(c)['target'].mean()
-        # テストデータのカテゴリを置換
-        test_x[c] = test_x[c].map(target_mean)
+def frequency_encode(df, columns: list):
+    for column in columns:
+        if column not in df.columns:
+            raise ValueError(f"Column '{column}' not found in DataFrame.")
+        frequency = df[column].value_counts(normalize=True)
+        df[column] = df[column].map(frequency)
+    return df
 
-        # 学習データの変換後の値を格納する配列を準備
-        tmp = np.repeat(np.nan, train_x.shape[0])
 
-        # 学習データを分割
-        kf = KFold(n_splits=4, shuffle=True, random_state=42)
-        for idx_1, idx_2 in kf.split(train_x):
-            # out-of-foldで各カテゴリにおける目的変数の平均を計算
-            target_mean = data_tmp.iloc[idx_1].groupby(c)['target'].mean()
-            # 変換後の値を一時配列に格納
-            tmp[idx_2] = train_x[c].iloc[idx_2].map(target_mean)
-
-        # 変換後のデータで元の変数を置換
-        train_x[c] = tmp
-
-    return train_x
+def label_encode(df, columns):
+    le = LabelEncoder()
+    df[columns] = df[columns].apply(lambda col: le.fit_transform(col))
+    return df
 
 
 def test_target_encoding():
@@ -117,5 +111,18 @@ class KFoldTargetEncoderTest(base.BaseEstimator, base.TransformerMixin):
         return X
 
 
+def test_encodings():
+    df = pd.DataFrame({'A': [1, 2, 3], 'B': ['a', 'b', 'a'], 'C': ['x', 'y', 'x']})
+    result = label_encode(df, ['B', 'C'])
+    print(result)
+
+    result = one_hot_encode(df, ['B', 'C'], binary_encode=False)
+    print('\n', result)
+
+    result = frequency_encode(df, ['B', 'C'])
+    print('\n', result)
+
+
 if __name__ == '__main__':
-    test_target_encoding()
+    # test_target_encoding()
+    test_encodings()
