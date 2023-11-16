@@ -5,7 +5,7 @@ import numpy as np
 import xgboost as xgb
 from sklearn.datasets import load_iris
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, TimeSeriesSplit
 
 # 参考
 # https://naotaka1128.hatenadiary.jp/entry/kaggle-compe-tips
@@ -47,6 +47,26 @@ def stratified_kfold_xgboost(X, y, params, n_splits=5, early_stopping_rounds=50)
     fold_accuracies = []
 
     for fold, (train_idx, valid_idx) in enumerate(skf.split(X, y), start=1):
+        X_train, y_train = X[train_idx], y[train_idx]
+        X_valid, y_valid = X[valid_idx], y[valid_idx]
+
+        model = train_model(X_train, y_train, X_valid, y_valid, params, early_stopping_rounds)
+        predictions = predict_model(model, X_valid)
+        accuracy = accuracy_score(y_valid, np.round(predictions))
+        fold_accuracies.append(accuracy)
+        print(f"Fold {fold} Accuracy: {accuracy}")
+
+    print(f"\nMean Accuracy over {n_splits} folds: {np.mean(fold_accuracies)}")
+
+
+def timeseries_kfold_xgboost(X, y, params, n_splits=5, early_stopping_rounds=50):
+    """
+    Perform Time Series Split K-Fold cross validation with XGBoost.
+    """
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    fold_accuracies = []
+
+    for fold, (train_idx, valid_idx) in enumerate(tscv.split(X), start=1):
         X_train, y_train = X[train_idx], y[train_idx]
         X_valid, y_valid = X[valid_idx], y[valid_idx]
 
