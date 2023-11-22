@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from scipy import stats
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import (MinMaxScaler, PowerTransformer,
+                                   StandardScaler)
 
 
 def standardize_datasets(train_df, test_df, columns):
@@ -46,90 +46,90 @@ def min_max_scale_datasets(train_df, test_df, columns):
     return train_df_scaled, test_df_scaled
 
 
-def apply_boxcox(df, column):
+def min_max_scale_combined(train_df, test_df, columns):
     """
-    指定されたDataFrameのカラムにBox-Cox変換を適用します。
+    Combine train and test datasets, and apply Min-Max scaling to specified columns.
 
-    :param df: pandas DataFrame
-    :param column: Box-Cox変換を適用するカラムの名前
-    :return: Box-Cox変換されたカラムを含むDataFrame
+    :param train_df: Training DataFrame
+    :param test_df: Testing DataFrame
+    :param columns: Columns to scale
+    :return: Min-Max scaled training and testing DataFrames
     """
-    # 指定されたカラムがDataFrame内に存在するかチェック
-    if column not in df.columns:
-        raise ValueError(f"Column '{column}' not found in DataFrame")
-
-    # データが正の値かどうかチェック
-    if any(df[column] <= 0):
-        raise ValueError(f"Column '{column}' contains non-positive values")
-
-    # Box-Cox変換の実行
-    df[column], _ = stats.boxcox(df[column])
-
-    return df
+    combined = pd.concat([train_df, test_df], ignore_index=True)
+    scaler = MinMaxScaler()
+    combined[columns] = scaler.fit_transform(combined[columns])
+    scaled_train = combined.iloc[:len(train_df), :]
+    scaled_test = combined.iloc[len(train_df):, :]
+    return scaled_train, scaled_test
 
 
-def apply_yeo_johnson(df, column):
+def standardize_combined(train_df, test_df, columns):
     """
-    指定されたDataFrameのカラムにYeo-Johnson変換を適用します。
+    Combine train and test datasets, and standardize specified columns.
 
-    :param df: pandas DataFrame
-    :param column: Yeo-Johnson変換を適用するカラムの名前
-    :return: Yeo-Johnson変換されたカラムを含むDataFrame
+    :param train_df: Training DataFrame
+    :param test_df: Testing DataFrame
+    :param columns: Columns to standardize
+    :return: Standardized training and testing DataFrames
     """
-    # 指定されたカラムがDataFrame内に存在するかチェック
-    if column not in df.columns:
-        raise ValueError(f"Column '{column}' not found in DataFrame")
+    combined = pd.concat([train_df, test_df], ignore_index=True)
+    scaler = StandardScaler()
+    combined[columns] = scaler.fit_transform(combined[columns])
+    scaled_train = combined.iloc[:len(train_df), :]
+    scaled_test = combined.iloc[len(train_df):, :]
+    return scaled_train, scaled_test
 
-    # Yeo-Johnson変換の実行
-    df[column], _ = stats.yeojohnson(df[column])
 
-    return df
+def boxcox_transform(train_df, test_df, columns):
+    """
+    Apply Box-Cox transformation to specified columns of training and testing data,
+    based on training data statistics.
 
+    :param train_df: Training DataFrame
+    :param test_df: Testing DataFrame
+    :param columns: Columns to apply Box-Cox transformation
+    :return: Box-Cox transformed training and testing DataFrames
+    """
+    # Check if columns contain only positive values in training data
+    for col in columns:
+        if train_df[col].le(0).any():
+            raise ValueError(f"Column '{col}' contains non-positive values, which are not allowed for Box-Cox transformation.")
+
+    # Initialize PowerTransformer for Box-Cox transformation
+    pt = PowerTransformer(method='box-cox')
+
+    # Fit the transformer to the training data and transform training and testing data
+    train_df_transformed = train_df.copy()
+    test_df_transformed = test_df.copy()
+    train_df_transformed[columns] = pt.fit_transform(train_df[columns])
+    test_df_transformed[columns] = pt.transform(test_df[columns])
+
+    return train_df_transformed, test_df_transformed
+
+
+def yeo_johnson_transform(train_df, test_df, columns):
+    """
+    Apply Yeo-Johnson transformation to specified columns of training and testing data,
+    based on training data statistics.
+
+    :param train_df: Training DataFrame
+    :param test_df: Testing DataFrame
+    :param columns: Columns to apply Yeo-Johnson transformation
+    :return: Yeo-Johnson transformed training and testing DataFrames
+    """
+    # Initialize PowerTransformer for Yeo-Johnson transformation
+    pt = PowerTransformer(method='yeo-johnson')
+
+    # Fit the transformer to the training data and transform training and testing data
+    train_df_transformed = train_df.copy()
+    test_df_transformed = test_df.copy()
+    train_df_transformed[columns] = pt.fit_transform(train_df[columns])
+    test_df_transformed[columns] = pt.transform(test_df[columns])
+
+    return train_df_transformed, test_df_transformed
 
 # ---------------------------------------------------------------------------------------------------------------------
 # 関数のテストコード
-
-
-def test_apply_boxcox():
-    # テスト用のデータフレームを作成
-    test_df = pd.DataFrame(
-        {'positive_data': [1, 2, 3, 4, 5],
-         'mixed_data': [0, -1, 1, 2, 3]}
-    )
-
-    # 正のデータに対してBox-Cox変換を実行
-    transformed_df = apply_boxcox(test_df, 'positive_data')
-
-    # 変換後のデータの検証
-    assert 'positive_data' in transformed_df.columns
-    assert all(transformed_df['positive_data'] >= 0)
-
-    # 負のデータが含まれる場合のエラーチェック
-    try:
-        apply_boxcox(test_df, 'mixed_data')
-        assert False  # この行は実行されないはず
-    except ValueError:
-        assert True  # 正しいエラーが発生したことを確認
-
-
-def test_apply_yeo_johnson():
-    # テスト用のデータフレームを作成
-    test_df = pd.DataFrame(
-        {'data': [1, 2, 3, 4, 5],
-         'negative_data': [-1, -2, -3, -4, -5]}
-    )
-
-    # 正のデータに対してYeo-Johnson変換を実行
-    transformed_df = apply_yeo_johnson(test_df, 'data')
-
-    # 変換後のデータの検証
-    assert 'data' in transformed_df.columns
-    assert transformed_df['data'].isnull().sum() == 0
-
-    # 負のデータに対してYeo-Johnson変換を実行（エラーは発生しない）
-    transformed_negative_df = apply_yeo_johnson(test_df, 'negative_data')
-    assert 'negative_data' in transformed_negative_df.columns
-    assert transformed_negative_df['negative_data'].isnull().sum() == 0
 
 
 def test_standardize_datasets():
@@ -154,13 +154,56 @@ def test_min_max_scale_datasets():
     assert mm_train['B'].min() == 0 and mm_train['B'].max() == 1
 
 
+def test_boxcox_transform():
+    # Create sample data for testing
+    train_df = pd.DataFrame({'positive_feature1': [1, 2, 3, 4, 5],
+                             'positive_feature2': [10, 20, 30, 40, 50],
+                             'mixed_feature': [-1, 0, 1, 2, 3]})
+    test_df = pd.DataFrame({'positive_feature1': [6, 7, 8, 9, 10],
+                            'positive_feature2': [60, 70, 80, 90, 100],
+                            'mixed_feature': [4, 5, 6, 7, 8]})
+
+    # Test for valid Box-Cox transformation
+    try:
+        transformed_train, transformed_test = boxcox_transform(train_df, test_df, ['positive_feature1', 'positive_feature2'])
+        assert transformed_train is not None and transformed_test is not None
+    except Exception as e:
+        assert False, f"Box-Cox transformation failed with error: {e}"
+
+    # Test for invalid Box-Cox transformation (non-positive values)
+    try:
+        boxcox_transform(train_df, test_df, ['mixed_feature'])
+        assert False, "Box-Cox transformation should fail for non-positive values"
+    except ValueError:
+        assert True  # Expected behavior
+    except Exception as e:
+        assert False, f"Unexpected error for non-positive values: {e}"
+
+
+def test_yeo_johnson_transform():
+    # Create sample data for testing
+    train_df = pd.DataFrame({'feature1': [1, 2, 3, 4, 5],
+                             'feature2': [10, 20, 30, 40, 50],
+                             'negative_feature': [-5, -4, -3, -2, -1]})
+    test_df = pd.DataFrame({'feature1': [6, 7, 8, 9, 10],
+                            'feature2': [60, 70, 80, 90, 100],
+                            'negative_feature': [-10, -9, -8, -7, -6]})
+
+    # Test for valid Yeo-Johnson transformation
+    try:
+        transformed_train, transformed_test = yeo_johnson_transform(train_df, test_df, ['feature1', 'feature2', 'negative_feature'])
+        assert transformed_train is not None and transformed_test is not None
+    except Exception as e:
+        assert False, f"Yeo-Johnson transformation failed with error: {e}"
+
+
 if __name__ == '__main__':
     # テストの実行
-    test_standardize_datasets()
     try:
-        test_apply_boxcox()
-        test_apply_yeo_johnson()
         test_min_max_scale_datasets()
+        test_standardize_datasets()
+        test_boxcox_transform()
+        test_yeo_johnson_transform()
         print("All tests passed successfully.")
     except AssertionError:
         print("Some tests failed.")
