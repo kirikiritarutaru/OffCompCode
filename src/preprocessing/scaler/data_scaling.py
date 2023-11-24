@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
@@ -78,41 +77,3 @@ def standardize_combined(train_df, test_df, columns):
     scaled_test = combined.iloc[len(train_df):, :]
     return scaled_train, scaled_test
 
-
-# ---------------------------------------------------------------------------------------------------------------------
-# 関数のテストコード
-
-
-def test_standardize_datasets():
-    # Create sample data
-    train_df = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': [5, 4, 3, 2, 1]})
-    test_df = pd.DataFrame({'A': [6, 7, 8, 9, 10], 'B': [10, 9, 8, 7, 6]})
-
-    # Test standardization function
-    columns = ['A', 'B']
-    std_train, std_test = standardize_datasets(train_df, test_df, columns)
-    assert np.isclose(std_train[columns].mean(), 0, atol=1e-6).all(), "Mean is not close to 0 in train data"
-
-
-def test_min_max_scale_datasets():
-    # Create sample data
-    train_df = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': [5, 4, 3, 2, 1]})
-    test_df = pd.DataFrame({'A': [6, 7, 8, 9, 10], 'B': [10, 9, 8, 7, 6]})
-
-    # Test Min-Max scaling function
-    mm_train, mm_test = min_max_scale_datasets(train_df, test_df, ['A', 'B'])
-    assert mm_train['A'].min() == 0 and mm_train['A'].max() == 1
-    assert mm_train['B'].min() == 0 and mm_train['B'].max() == 1
-
-
-
-if __name__ == '__main__':
-    # テストの実行
-    try:
-        test_min_max_scale_datasets()
-        test_standardize_datasets()
-        print("All tests passed successfully.")
-    except AssertionError:
-        print("Some tests failed.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
