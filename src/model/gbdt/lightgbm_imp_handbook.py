@@ -245,6 +245,12 @@ def vis_depth_one_decision_tree():
     index = []
     loss = []
     # 分割点ごとの予測値,SSE,MSEを計算
+    # 特徴量RMでの分割点を探索する過程を可視化している
+    # 1. 特徴量RMを値の大きさでソート
+    # 2. ソートされた特徴量RMの各インデックスで分割し、右の葉と左の葉をつくる
+    # 3. 右の葉と左の葉にそれぞれ含まれているデータの平均値を予測値として、目的値との誤差平方和（SSE）を算出する
+    #     SSEの算出方法：「右の葉に含まれるレコードの目的変数の平均値とそれぞれのレコードの目的変数との誤差平方和」＋「左の葉に含まれる…」
+    # 4. SSEが最も低くなるインデックスのデータを分割点とする
     for i in range(1, len(X_train)):
         X_left = np.array(X_train[:i])
         X_right = np.array(X_train[i:])
@@ -503,10 +509,10 @@ def lightgbm_predict_use_rm():
 
 if __name__ == '__main__':
     # eda()
-    multi_reg()
+    # multi_reg()
     # vis_simple_reg()
     # vis_decision_tree()
-    # vis_depth_one_decision_tree()
+    vis_depth_one_decision_tree()
     # vis_depth_two_decision_tree()
     # lightgbm_proc()
     # lightgbm_predict_use_rm()
