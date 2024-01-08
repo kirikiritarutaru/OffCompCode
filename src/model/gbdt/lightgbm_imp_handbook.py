@@ -89,6 +89,8 @@ def multi_reg():
     print('定数項 w0:', model.intercept_)
 
     # 回帰係数の可視化
+    # 正の方向に値が大きい特徴量ほど予測値にプラスの影響を与える
+    # 負の方向に値が大きい特徴量ほど予測値にマイナスの影響を与える
     importances = model.coef_  # 回帰係数
     indices = np.argsort(importances)[::-1]  # 回帰係数を降順にソート
 
@@ -501,10 +503,10 @@ def lightgbm_predict_use_rm():
 
 if __name__ == '__main__':
     # eda()
-    # multi_reg()
+    multi_reg()
     # vis_simple_reg()
     # vis_decision_tree()
     # vis_depth_one_decision_tree()
     # vis_depth_two_decision_tree()
     # lightgbm_proc()
-    lightgbm_predict_use_rm()
+    # lightgbm_predict_use_rm()
