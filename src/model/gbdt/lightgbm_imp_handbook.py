@@ -10,12 +10,14 @@ import shap
 from graphviz import Source
 from sklearn import tree
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
+                             mean_squared_error, precision_score, recall_score)
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 
 
+# --------------------- Sec 2 ---------------------
 def eda():
     # データセットの読み込み
     df = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data', header=None, sep='\s+')
@@ -507,12 +509,140 @@ def lightgbm_predict_use_rm():
     plt.show()
 
 
+# --------------------- Sec 3 ---------------------
+def sec3_eda():
+    # データセットの読み込み
+    df = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data', header=None)
+    df.columns = [
+        'age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-status', 'occupation',
+        'relationship', 'race', 'gender', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'income'
+    ]
+    print(df.head())
+
+    print('データ形状')
+    print(df.shape)
+
+    print('欠損値の有無')
+    print(df.isnull().sum())
+
+    print('データ型')
+    print(df.info())
+
+    print('数値の統計情報')
+    print(df.describe().T)
+
+    # 数値のヒストグラム
+    plt.rcParams['figure.figsize'] = (10, 6)
+    df.hist(bins=20)
+    plt.tight_layout()
+    plt.show()
+
+    print('カテゴリ変数の統計情報')
+    print(df.describe(exclude='number').T)
+
+    # カテゴリ変数のリスト表示
+    cat_cols = [
+        'workclass', 'education', 'marital-status', 'occupation', 'relationship',
+        'race', 'gender', 'native-country', 'income'
+    ]
+    for col in cat_cols:
+        print('%s: %s' % (col, list(df[col].unique())))
+
+    # カテゴリ変数の棒グラフ
+    plt.rcParams['figure.figsize'] = (20, 20)
+    for i, name in enumerate(cat_cols):
+        ax = plt.subplot(5, 2, i+1)
+        df[name].value_counts().plot(kind='bar', ax=ax)
+    plt.tight_layout()
+    plt.show()
+
+    # 半角スペースの削除
+    for s in cat_cols:
+        df[s] = df[s].str.replace(' ', '')
+
+    print('レコードの絞り込み')
+    df = df[df['native-country'].isin(['United-States'])]
+    df = df.drop(['native-country'], axis=1)
+    df.reset_index(inplace=True, drop=True)
+    print(df.shape)
+
+    print('前処理後のincome件数内訳')
+    print(df['income'].value_counts())
+
+    print('前処理後のincome件数可視化')
+    plt.figure(figsize=(6, 3))
+    sns.countplot(x='income', data=df)
+    plt.show()
+
+    # 正解ラベルの作成
+    df['income'] = df['income'].replace('<=50K', 0)
+    df['income'] = df['income'].replace('>50K', 1)
+
+    # 特徴量と目的変数の設定
+    X = df.drop(['income'], axis=1)
+    y = df['income']
+
+    print('学習データとテストデータに分割')
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, stratify=y, random_state=0)
+    print('X_trainの形状：', X_train.shape, ' y_trainの形状：', y_train.shape, ' X_testの形状：', X_test.shape, ' y_testの形状：', y_test.shape)
+
+    print('学習データとテストデータのラベル件数内訳')
+    print(y_train.value_counts())
+    print(y_test.value_counts())
+
+    # 予測ラベル0の作成
+    y_test_zeros = np.zeros(5834)  # テストデータレコード数の0を作成
+    y_test_zeros
+
+    # 予測ラベル0の混同行列
+    cm = confusion_matrix(y_test, y_test_zeros)
+    plt.figure(figsize=(6, 4))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.xlabel('pred')
+    plt.ylabel('label')
+    plt.show()
+
+    # 予測ラベル0の評価指標
+    ac_score = accuracy_score(y_test, y_test_zeros)
+    pr_score = precision_score(y_test, y_test_zeros, zero_division=0.0)
+    rc_score = recall_score(y_test, y_test_zeros)
+    f1 = f1_score(y_test, y_test_zeros)
+
+    print('accuracy = %.2f' % (ac_score))
+    print('precision = %.2f' % (pr_score))
+    print('recall = %.2f' % (rc_score))
+    print('F1-score = %.2f' % (f1))
+
+    # 予測ラベル1の作成
+    y_test_ones = np.ones(5834)  # テストデータレコード数の1を作成
+
+    # 予測ラベル1の混同行列
+    cm = confusion_matrix(y_test, y_test_ones)
+    plt.figure(figsize=(6, 4))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.xlabel('pred')
+    plt.ylabel('label')
+    plt.show()
+
+    # 予測ラベル1の評価指標
+    ac_score = accuracy_score(y_test, y_test_ones)
+    pr_score = precision_score(y_test, y_test_ones)
+    rc_score = recall_score(y_test, y_test_ones)
+    f1 = f1_score(y_test, y_test_ones)
+
+    print('accuracy = %.2f' % (ac_score))
+    print('precision = %.2f' % (pr_score))
+    print('recall = %.2f' % (rc_score))
+    print('F1-score = %.2f' % (f1))
+
+
 if __name__ == '__main__':
     # eda()
     # multi_reg()
     # vis_simple_reg()
     # vis_decision_tree()
-    vis_depth_one_decision_tree()
+    # vis_depth_one_decision_tree()
     # vis_depth_two_decision_tree()
     # lightgbm_proc()
     # lightgbm_predict_use_rm()
+    sec3_eda()
