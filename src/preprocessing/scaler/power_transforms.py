@@ -14,10 +14,12 @@ def boxcox_transform(train_df, test_df, columns):
     # Check if columns contain only positive values in training data
     for col in columns:
         if train_df[col].le(0).any():
-            raise ValueError(f"Column '{col}' contains non-positive values, which are not allowed for Box-Cox transformation.")
+            raise ValueError(
+                f"Column '{col}' contains non-positive values, which are not allowed for Box-Cox transformation."
+            )
 
     # Initialize PowerTransformer for Box-Cox transformation
-    pt = PowerTransformer(method='box-cox')
+    pt = PowerTransformer(method="box-cox")
 
     # Fit the transformer to the training data and transform training and testing data
     train_df_transformed = train_df.copy()
@@ -39,7 +41,7 @@ def yeo_johnson_transform(train_df, test_df, columns):
     :return: Yeo-Johnson transformed training and testing DataFrames
     """
     # Initialize PowerTransformer for Yeo-Johnson transformation
-    pt = PowerTransformer(method='yeo-johnson')
+    pt = PowerTransformer(method="yeo-johnson")
 
     # Fit the transformer to the training data and transform training and testing data
     train_df_transformed = train_df.copy()

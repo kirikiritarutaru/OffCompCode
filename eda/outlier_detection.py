@@ -8,7 +8,7 @@ def detect_outliers_with_iqr(df):
     outlier_indices = []
 
     for col in df.columns:
-        if df[col].dtype == 'float64' or df[col].dtype == 'int64':
+        if df[col].dtype == "float64" or df[col].dtype == "int64":
             Q1 = df[col].quantile(0.25)
             Q3 = df[col].quantile(0.75)
             IQR = Q3 - Q1

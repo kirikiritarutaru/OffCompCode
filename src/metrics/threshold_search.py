@@ -11,11 +11,11 @@ def threshold_search(y_true, y_proba):
         if score > best_score:
             best_threshold = threshold
             best_score = score
-    search_result = {'threshold': best_threshold, 'f1': best_score}
+    search_result = {"threshold": best_threshold, "f1": best_score}
     return search_result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # テストデータの生成
     np.random.seed(42)
     y_true = np.random.randint(0, 2, 100)
@@ -23,9 +23,9 @@ if __name__ == '__main__':
 
     result = threshold_search(y_true, y_proba)
 
-    print("最適な閾値:", result['threshold'])
-    print("F1スコア:", result['f1'])
+    print("最適な閾値:", result["threshold"])
+    print("F1スコア:", result["f1"])
 
     # 必要に応じて、結果の妥当性をアサート文でチェック
-    assert 0 <= result['threshold'] <= 1
-    assert 0 <= result['f1'] <= 1
+    assert 0 <= result["threshold"] <= 1
+    assert 0 <= result["f1"] <= 1

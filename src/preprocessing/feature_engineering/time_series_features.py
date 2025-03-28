@@ -11,6 +11,7 @@ def calculate_moving_average(data, window_size):
     """
     return data.rolling(window=window_size).mean()
 
+
 def create_lag_features(data, lag_sizes):
     """
     Create lag features for time series data.
@@ -21,6 +22,5 @@ def create_lag_features(data, lag_sizes):
     """
     lagged_data = pd.DataFrame(index=data.index)
     for lag in lag_sizes:
-        lagged_data[f'lag_{lag}'] = data.shift(lag)
+        lagged_data[f"lag_{lag}"] = data.shift(lag)
     return lagged_data
-

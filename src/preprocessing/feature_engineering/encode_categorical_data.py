@@ -34,16 +34,18 @@ def label_encode(df, columns):
 def test_target_encoding():
     # サンプルデータの作成
     np.random.seed(42)
-    train_x = pd.DataFrame({'cat_var': np.random.choice(['A', 'B', 'C'], size=20)})
+    train_x = pd.DataFrame({"cat_var": np.random.choice(["A", "B", "C"], size=20)})
     train_y = np.random.rand(20) > 0.5  # ランダムなバイナリターゲット
-    test_x = pd.DataFrame({'cat_var': np.random.choice(['A', 'B', 'C'], size=10)})
+    test_x = pd.DataFrame({"cat_var": np.random.choice(["A", "B", "C"], size=10)})
 
-    X = pd.concat([train_x, pd.DataFrame(train_y, columns=['target'])], axis=1)
-    targetc = KFoldTargetEncoderTrain('cat_var', 'target')
+    X = pd.concat([train_x, pd.DataFrame(train_y, columns=["target"])], axis=1)
+    targetc = KFoldTargetEncoderTrain("cat_var", "target")
     new_train = targetc.fit_transform(X)
     print(new_train)
 
-    test_targetc = KFoldTargetEncoderTest(new_train, 'cat_var', 'cat_var_Kfold_Target_Enc')
+    test_targetc = KFoldTargetEncoderTest(
+        new_train, "cat_var", "cat_var_Kfold_Target_Enc"
+    )
     new_test = test_targetc.fit_transform(test_x)
     print(new_test)
 
@@ -54,7 +56,9 @@ class KFoldTargetEncoderTrain(base.BaseEstimator, base.TransformerMixin):
     https://www.kaggle.com/code/anuragbantu/target-encoding-beginner-s-guide
     """
 
-    def __init__(self, colnames, targetName, n_fold=5, verbosity=True, discardOriginal_col=False):
+    def __init__(
+        self, colnames, targetName, n_fold=5, verbosity=True, discardOriginal_col=False
+    ):
         self.colnames = colnames
         self.targetName = targetName
         self.n_fold = n_fold
@@ -65,22 +69,29 @@ class KFoldTargetEncoderTrain(base.BaseEstimator, base.TransformerMixin):
         return self
 
     def transform(self, X):
-        assert (isinstance(self.targetName, str))
-        assert (isinstance(self.colnames, str))
-        assert (self.colnames in X.columns)
-        assert (self.targetName in X.columns)
+        assert isinstance(self.targetName, str)
+        assert isinstance(self.colnames, str)
+        assert self.colnames in X.columns
+        assert self.targetName in X.columns
         mean_of_target = X[self.targetName].mean()
         kf = KFold(n_splits=self.n_fold, shuffle=True, random_state=2019)
-        col_mean_name = self.colnames + '_' + 'Kfold_Target_Enc'
+        col_mean_name = self.colnames + "_" + "Kfold_Target_Enc"
         X[col_mean_name] = np.nan
         for tr_ind, val_ind in kf.split(X):
             X_tr, X_val = X.iloc[tr_ind], X.iloc[val_ind]
-            X.loc[X.index[val_ind], col_mean_name] = X_val[self.colnames].map(X_tr.groupby(self.colnames)[self.targetName].mean())
+            X.loc[X.index[val_ind], col_mean_name] = X_val[self.colnames].map(
+                X_tr.groupby(self.colnames)[self.targetName].mean()
+            )
             X[col_mean_name].fillna(mean_of_target, inplace=True)
         if self.verbosity:
             encoded_feature = X[col_mean_name].values
-            print('Correlation between the new feature, {} and , {} is {}.'.format(col_mean_name,
-                  self.targetName, np.corrcoef(X[self.targetName].values, encoded_feature)[0][1]))
+            print(
+                "Correlation between the new feature, {} and , {} is {}.".format(
+                    col_mean_name,
+                    self.targetName,
+                    np.corrcoef(X[self.targetName].values, encoded_feature)[0][1],
+                )
+            )
         if self.discardOriginal_col:
             X = X.drop(self.targetName, axis=1)
         return X
@@ -101,7 +112,12 @@ class KFoldTargetEncoderTest(base.BaseEstimator, base.TransformerMixin):
         return self
 
     def transform(self, X):
-        mean = self.train[[self.colNames, self.encodedName]].groupby(self.colNames).mean().reset_index()
+        mean = (
+            self.train[[self.colNames, self.encodedName]]
+            .groupby(self.colNames)
+            .mean()
+            .reset_index()
+        )
 
         dd = {}
         for index, row in mean.iterrows():
@@ -112,17 +128,17 @@ class KFoldTargetEncoderTest(base.BaseEstimator, base.TransformerMixin):
 
 
 def test_encodings():
-    df = pd.DataFrame({'A': [1, 2, 3], 'B': ['a', 'b', 'a'], 'C': ['x', 'y', 'x']})
-    result = label_encode(df, ['B', 'C'])
+    df = pd.DataFrame({"A": [1, 2, 3], "B": ["a", "b", "a"], "C": ["x", "y", "x"]})
+    result = label_encode(df, ["B", "C"])
     print(result)
 
-    result = one_hot_encode(df, ['B', 'C'], binary_encode=False)
-    print('\n', result)
+    result = one_hot_encode(df, ["B", "C"], binary_encode=False)
+    print("\n", result)
 
-    result = frequency_encode(df, ['B', 'C'])
-    print('\n', result)
+    result = frequency_encode(df, ["B", "C"])
+    print("\n", result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test_target_encoding()
     test_encodings()

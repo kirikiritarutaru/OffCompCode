@@ -5,16 +5,12 @@ import numpy as np
 from sklearn.metrics import accuracy_score, cohen_kappa_score
 
 
-def qwk(
-    y_true: Union[np.ndarray, list],
-    y_pred: Union[np.ndarray, list],
-    max_rat: int = 3
-) -> float:
+def qwk(y_true: Union[np.ndarray, list], y_pred: Union[np.ndarray, list], max_rat: int = 3) -> float:
     y_true_ = np.asarray(y_true)
     y_pred_ = np.asarray(y_pred)
 
-    hist1 = np.zeros((max_rat + 1, ))
-    hist2 = np.zeros((max_rat + 1, ))
+    hist1 = np.zeros((max_rat + 1,))
+    hist2 = np.zeros((max_rat + 1,))
 
     uniq_class = np.unique(y_true_)
     for i in uniq_class:
@@ -33,13 +29,7 @@ def qwk(
 
 
 class OptimizedRounder(object):
-    def __init__(
-        self,
-        n_overall: int = 5,
-        n_classwise: int = 5,
-        n_classes: int = 7,
-        metric: str = "qwk"
-    ):
+    def __init__(self, n_overall: int = 5, n_classwise: int = 5, n_classes: int = 7, metric: str = "qwk"):
         self.n_overall = n_overall
         self.n_classwise = n_classwise
         self.n_classes = n_classes
@@ -62,8 +52,7 @@ class OptimizedRounder(object):
             (0.01, 1.0 / self.n_classes + 0.05),
         ]
         for i in range(1, self.n_classes):
-            ab_start.append((i * 1.0 / self.n_classes + 0.05,
-                             (i + 1) * 1.0 / self.n_classes + 0.05))
+            ab_start.append((i * 1.0 / self.n_classes + 0.05, (i + 1) * 1.0 / self.n_classes + 0.05))
         for _ in range(self.n_overall):
             for idx in range(self.n_classes - 1):
                 # golden section search
@@ -89,7 +78,7 @@ class OptimizedRounder(object):
         return X_p
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # テストデータの生成
     np.random.seed(0)
     y_true = np.random.choice([0, 1, 2, 3], 100, p=[0.1, 0.4, 0.4, 0.1])
@@ -102,10 +91,10 @@ if __name__ == '__main__':
     start = time.time()
     score = qwk(y_true, y_pred, max_rat=3)
     end = time.time()
-    print(f"QWKスコア: {score} ({end-start:.6f})")
+    print(f"QWKスコア: {score} ({end - start:.6f})")
     start = time.time()
     score = cohen_kappa_score(y_true, y_pred, weights="quadratic")
     end = time.time()
-    print(f'sklearn qwk: {score} ({end-start:.6f})')
+    print(f"sklearn qwk: {score} ({end - start:.6f})")
 
     assert 0 <= score <= 1

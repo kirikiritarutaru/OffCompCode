@@ -16,16 +16,17 @@ def plot_histograms(df, bins=20):
 
     for ax, col in zip(axes, df.columns):
         df[col].hist(ax=ax, bins=bins)
-        ax.set_title(f'Histogram of {col}')
+        ax.set_title(f"Histogram of {col}")
         ax.set_xlabel(col)
-        ax.set_ylabel('Frequency')
+        ax.set_ylabel("Frequency")
 
     plt.tight_layout()
     plt.show()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     iris = load_iris()
-    X_train, X_test, y_train, y_test = train_test_split(iris['data'], iris['target'], random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(iris["data"], iris["target"], random_state=0)
 
     iris_dataframe = pd.DataFrame(X_train, columns=iris.feature_names)
     plot_histograms(iris_dataframe)

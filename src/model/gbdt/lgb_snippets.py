@@ -77,19 +77,19 @@ def evaluate_with_stratifiedkfold(X, y, params, n_splits=3, early_stopping_round
     return fold_scores
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # サンプルデータセットのロード
     data = load_iris()
     X = data.data
     y = data.target
 
     params = {
-        'objective': 'multiclass',
-        'metric': 'multi_logloss',
-        'num_class': 3,
+        "objective": "multiclass",
+        "metric": "multi_logloss",
+        "num_class": 3,
         # 'n_estimators': 1000,
-        'learning_rate': 0.05,
-        'verbose': -1
+        "learning_rate": 0.05,
+        "verbose": -1,
     }
     scores = evaluate_with_stratifiedkfold(X, y, params)
     mean_score = sum(scores) / len(scores)

@@ -44,41 +44,43 @@ def remove_constant_and_duplicate_columns(df_train, df_test=None):
 
 def test_remove_constant_and_duplicate_columns():
     # テスト用のデータフレームを生成
-    df_train = pd.DataFrame({
-        'A': [1, 1, 1, 1],  # 定数列
-        'B': [1, 2, 3, 4],  # 一意の列
-        'C': [1, 2, 3, 4],  # 'B'列と重複
-        'D': [0, 0, 0, 0],  # 定数列
-        'E': [5, 6, 7, 8]   # 一意の列
-    })
+    df_train = pd.DataFrame(
+        {
+            "A": [1, 1, 1, 1],  # 定数列
+            "B": [1, 2, 3, 4],  # 一意の列
+            "C": [1, 2, 3, 4],  # 'B'列と重複
+            "D": [0, 0, 0, 0],  # 定数列
+            "E": [5, 6, 7, 8],  # 一意の列
+        }
+    )
 
-    df_test = pd.DataFrame({
-        'A': [1, 1, 1, 1],
-        'B': [4, 5, 6, 7],
-        'C': [4, 5, 6, 7],
-        'D': [0, 0, 0, 0],
-        'E': [8, 9, 10, 11]
-    })
+    df_test = pd.DataFrame(
+        {"A": [1, 1, 1, 1], "B": [4, 5, 6, 7], "C": [4, 5, 6, 7], "D": [0, 0, 0, 0], "E": [8, 9, 10, 11]}
+    )
 
     # remove_constant_and_duplicate_columns 関数をテスト
     df_train_cleaned, df_test_cleaned = remove_constant_and_duplicate_columns(df_train, df_test)
 
     # 結果の検証
-    assert 'A' not in df_train_cleaned.columns, "Column 'A' should be removed."
-    assert 'C' not in df_train_cleaned.columns, "Column 'C' should be removed."
-    assert 'D' not in df_train_cleaned.columns, "Column 'D' should be removed."
-    assert 'B' in df_train_cleaned.columns and 'E' in df_train_cleaned.columns, "Columns 'B' and 'E' should not be removed."
+    assert "A" not in df_train_cleaned.columns, "Column 'A' should be removed."
+    assert "C" not in df_train_cleaned.columns, "Column 'C' should be removed."
+    assert "D" not in df_train_cleaned.columns, "Column 'D' should be removed."
+    assert "B" in df_train_cleaned.columns and "E" in df_train_cleaned.columns, (
+        "Columns 'B' and 'E' should not be removed."
+    )
 
     if df_test_cleaned is not None:
-        assert 'A' not in df_test_cleaned.columns, "Column 'A' should be removed from test set."
-        assert 'C' not in df_test_cleaned.columns, "Column 'C' should be removed from test set."
-        assert 'D' not in df_test_cleaned.columns, "Column 'D' should be removed from test set."
-        assert 'B' in df_test_cleaned.columns and 'E' in df_test_cleaned.columns, "Columns 'B' and 'E' should not be removed from test set."
+        assert "A" not in df_test_cleaned.columns, "Column 'A' should be removed from test set."
+        assert "C" not in df_test_cleaned.columns, "Column 'C' should be removed from test set."
+        assert "D" not in df_test_cleaned.columns, "Column 'D' should be removed from test set."
+        assert "B" in df_test_cleaned.columns and "E" in df_test_cleaned.columns, (
+            "Columns 'B' and 'E' should not be removed from test set."
+        )
     else:
         raise AssertionError("Test set cleaning failed, df_test_cleaned should not be None.")
 
     print("All tests passed!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_remove_constant_and_duplicate_columns()

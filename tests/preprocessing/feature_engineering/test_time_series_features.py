@@ -7,12 +7,10 @@ import pandas as pd
 project_root = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.append(str(project_root))
 
-from src.preprocessing.feature_engineering.time_series_features import (
-    calculate_moving_average, create_lag_features)
+from src.preprocessing.feature_engineering.time_series_features import calculate_moving_average, create_lag_features
 
 
 class TestTimeSeriesFeatures(unittest.TestCase):
-
     def test_calculate_moving_average(self):
         data = pd.Series([1, 2, 3, 4, 5])
         window_size = 2
@@ -24,13 +22,11 @@ class TestTimeSeriesFeatures(unittest.TestCase):
     def test_create_lag_features(self):
         data = pd.Series([1, 2, 3, 4, 5])
         lag_sizes = [1, 2]
-        expected_result = pd.DataFrame({
-            'lag_1': [None, 1, 2, 3, 4],
-            'lag_2': [None, None, 1, 2, 3]
-        })
+        expected_result = pd.DataFrame({"lag_1": [None, 1, 2, 3, 4], "lag_2": [None, None, 1, 2, 3]})
 
         lag_features = create_lag_features(data, lag_sizes)
         pd.testing.assert_frame_equal(lag_features, expected_result)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -56,8 +56,8 @@ def min_max_scale_combined(train_df, test_df, columns):
     combined = pd.concat([train_df, test_df], ignore_index=True)
     scaler = MinMaxScaler()
     combined[columns] = scaler.fit_transform(combined[columns])
-    scaled_train = combined.iloc[:len(train_df), :]
-    scaled_test = combined.iloc[len(train_df):, :]
+    scaled_train = combined.iloc[: len(train_df), :]
+    scaled_test = combined.iloc[len(train_df) :, :]
     return scaled_train, scaled_test
 
 
@@ -73,7 +73,6 @@ def standardize_combined(train_df, test_df, columns):
     combined = pd.concat([train_df, test_df], ignore_index=True)
     scaler = StandardScaler()
     combined[columns] = scaler.fit_transform(combined[columns])
-    scaled_train = combined.iloc[:len(train_df), :]
-    scaled_test = combined.iloc[len(train_df):, :]
+    scaled_train = combined.iloc[: len(train_df), :]
+    scaled_test = combined.iloc[len(train_df) :, :]
     return scaled_train, scaled_test
-

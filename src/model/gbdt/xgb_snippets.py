@@ -18,14 +18,14 @@ def train_model(X_train, y_train, X_valid, y_valid, params, early_stopping_round
     dtrain = xgb.DMatrix(X_train, label=y_train, feature_names=f_name)
     dvalid = xgb.DMatrix(X_valid, label=y_valid, feature_names=f_name)
 
-    evals = [(dtrain, 'train'), (dvalid, 'valid')]
+    evals = [(dtrain, "train"), (dvalid, "valid")]
     model = xgb.train(
         params=params,
         dtrain=dtrain,
         num_boost_round=1000,
         early_stopping_rounds=early_stopping_rounds,
         evals=evals,
-        verbose_eval=False
+        verbose_eval=False,
     )
     return model
 
@@ -112,11 +112,11 @@ def stratified_kfold_xgb_params_search(X, y, param_grid, f_name=None, n_splits=5
                 early_stopping_rounds=early_stopping_rounds,
                 evals=[(dtest, "eval")],
                 evals_result=evals_result,
-                verbose_eval=False
+                verbose_eval=False,
             )
 
             # 最良のスコアを更新
-            final_score = evals_result['eval'][params['eval_metric']][model.best_iteration]
+            final_score = evals_result["eval"][params["eval_metric"]][model.best_iteration]
             if final_score < best_score:
                 best_score = final_score
                 best_params = params
@@ -129,35 +129,27 @@ def stratified_kfold_xgb_params_search(X, y, param_grid, f_name=None, n_splits=5
 
 def plot_feature_importance(model):
     _, ax = plt.subplots(figsize=(12, 4))
-    xgb.plot_importance(model, ax=ax, importance_type='gain')
+    xgb.plot_importance(model, ax=ax, importance_type="gain")
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # 2値分類の場合
-    xgb_params = {
-        'objective': 'binary:logistic',
-        'eval_metric': 'logloss',
-        'seed': 42
-    }
+    xgb_params = {"objective": "binary:logistic", "eval_metric": "logloss", "seed": 42}
 
     # 回帰の場合
-    xgb_params = {
-        'objective': 'reg:squarederror',
-        'eval_metric': 'rmse',
-        'seed': 42
-    }
+    xgb_params = {"objective": "reg:squarederror", "eval_metric": "rmse", "seed": 42}
 
     # 多クラス分類の場合
     xgb_params = {
-        'objective': 'multi:softmax',
-        'eval_metric': 'mlogloss',
-        'num_class': 3,
-        'seed': 42,
-        'eta': 0.05,
-        'max_depth': 6,
-        'subsample': 0.8,
-        'colsample_bytree': 0.8
+        "objective": "multi:softmax",
+        "eval_metric": "mlogloss",
+        "num_class": 3,
+        "seed": 42,
+        "eta": 0.05,
+        "max_depth": 6,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
     }
 
     # パラメータのグリッドサーチ
@@ -166,19 +158,19 @@ if __name__ == '__main__':
     # mcw_options = [1, 3, 6, 10] # train/valのgapがあったら大きく
     mcw_options = [1]
     fixed_params = {
-        'objective': 'multi:softmax',
-        'eval_metric': 'mlogloss',
-        'seed': 42,
-        'num_class': 3,
-        'subsample': 0.7,
-        'colsample_bytree': 0.8,
+        "objective": "multi:softmax",
+        "eval_metric": "mlogloss",
+        "seed": 42,
+        "num_class": 3,
+        "subsample": 0.7,
+        "colsample_bytree": 0.8,
     }
     param_grid = [
         {
             **fixed_params,
-            'eta': eta,
-            'max_depth': depth,
-            'min_child_weight': mcw,
+            "eta": eta,
+            "max_depth": depth,
+            "min_child_weight": mcw,
         }
         for depth, eta, mcw in itertools.product(max_depth_options, eta_options, mcw_options)
     ]
