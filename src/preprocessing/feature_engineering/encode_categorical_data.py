@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from sklearn import base
@@ -43,9 +45,7 @@ def test_target_encoding():
     new_train = targetc.fit_transform(X)
     print(new_train)
 
-    test_targetc = KFoldTargetEncoderTest(
-        new_train, "cat_var", "cat_var_Kfold_Target_Enc"
-    )
+    test_targetc = KFoldTargetEncoderTest(new_train, "cat_var", "cat_var_Kfold_Target_Enc")
     new_test = test_targetc.fit_transform(test_x)
     print(new_test)
 
@@ -57,24 +57,29 @@ class KFoldTargetEncoderTrain(base.BaseEstimator, base.TransformerMixin):
     """
 
     def __init__(
-        self, colnames, targetName, n_fold=5, verbosity=True, discardOriginal_col=False
-    ):
+        self,
+        colnames: str,
+        targetName: str,
+        n_fold: int = 5,
+        verbosity: bool = False,
+        discardOriginal_col: bool = False,
+    ) -> None:
         self.colnames = colnames
         self.targetName = targetName
         self.n_fold = n_fold
         self.verbosity = verbosity
         self.discardOriginal_col = discardOriginal_col
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> "KFoldTargetEncoderTrain":
         return self
 
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         assert isinstance(self.targetName, str)
         assert isinstance(self.colnames, str)
         assert self.colnames in X.columns
         assert self.targetName in X.columns
         mean_of_target = X[self.targetName].mean()
-        kf = KFold(n_splits=self.n_fold, shuffle=True, random_state=2019)
+        kf = KFold(n_splits=self.n_fold, shuffle=True, random_state=42)
         col_mean_name = self.colnames + "_" + "Kfold_Target_Enc"
         X[col_mean_name] = np.nan
         for tr_ind, val_ind in kf.split(X):
@@ -82,7 +87,8 @@ class KFoldTargetEncoderTrain(base.BaseEstimator, base.TransformerMixin):
             X.loc[X.index[val_ind], col_mean_name] = X_val[self.colnames].map(
                 X_tr.groupby(self.colnames)[self.targetName].mean()
             )
-            X[col_mean_name].fillna(mean_of_target, inplace=True)
+            X[col_mean_name] = X[col_mean_name].fillna(mean_of_target)
+
         if self.verbosity:
             encoded_feature = X[col_mean_name].values
             print(
@@ -103,27 +109,25 @@ class KFoldTargetEncoderTest(base.BaseEstimator, base.TransformerMixin):
     https://www.kaggle.com/code/anuragbantu/target-encoding-beginner-s-guide
     """
 
-    def __init__(self, train, colNames, encodedName):
+    def __init__(self, train: pd.DataFrame, colNames: str, encodedName: str) -> None:
         self.train = train
         self.colNames = colNames
         self.encodedName = encodedName
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> "KFoldTargetEncoderTest":
         return self
 
-    def transform(self, X):
-        mean = (
-            self.train[[self.colNames, self.encodedName]]
-            .groupby(self.colNames)
-            .mean()
-            .reset_index()
-        )
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        # カテゴリごとのエンコード値を計算
+        mean = self.train[[self.colNames, self.encodedName]].groupby(self.colNames).mean().reset_index()
 
-        dd = {}
-        for index, row in mean.iterrows():
-            dd[row[self.colNames]] = row[self.encodedName]
-        X[self.encodedName] = X[self.colNames]
-        X = X.replace({self.encodedName: dd})
+        # 辞書形式に変換
+        mapping_dict = dict(zip(mean[self.colNames], mean[self.encodedName]))
+
+        # 新しい列を作成し、マッピングを適用
+        X = X.copy()  # 元のデータフレームを変更しないようにコピー
+        X[self.encodedName] = X[self.colNames].map(mapping_dict)
+
         return X
 
 
